@@ -7,7 +7,7 @@
   "description": "Novel reading platform with CSS-based structure",
   "config": {
     "script_path": "sources/novelfire/index.js",
-    "default_format": "epub",
+    "default_format": "web_novel",
     "home": {
       "fetch": {
         "type": "js",
