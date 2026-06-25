@@ -1,96 +1,196 @@
-// NovelFire Extension
-// Based on the Rust SourceConfig from defaults.rs
+function cleanHtml(htmlStr) {
+    if (!htmlStr) return "";
+    return htmlStr
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<\/p>/gi, "\n\n")
+        .replace(/<\/div>/gi, "\n")
+        .replace(/<[^>]+>/g, "")
+        .replace(/&nbsp;/g, " ")
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&#x27;/g, "'")
+        .trim();
+}
 
-export const source = {
-    id: "novelfire",
-    name: "NovelFire",
-    url: "https://novelfire.net",
-    version: "1.0.0",
+function cleanField(str) {
+    return cleanHtml(str).replace(/\s+/g, ' ');
+}
 
-    // Search for books
-    search: async function(query) {
-        // NovelFire search API
-        let url = ;
-        let jsonStr = await fetch_json(url); // fetch_json returns the string now
-        let response = JSON.parse(jsonStr);
+function parseHome(html) {
+    var sections = [];
+    var sectionRegex = /<section[^>]+class="[^"]*container vspace[^"]*"[^>]*>([\s\S]*?)<\/section>/g;
+    var match;
+    while ((match = sectionRegex.exec(html)) !== null) {
+        var sectionContent = match[1];
+        
+        var titleMatch = /<h3>([\s\S]*?)<\/h3>/.exec(sectionContent);
+        if (!titleMatch) continue;
+        var title = cleanField(titleMatch[1]);
+        
+        var layout = "grid";
+        if (title.indexOf("Recommend") !== -1) {
+            layout = "horizontal";
+        } else if (title.indexOf("Ranking") !== -1) {
+            layout = "ranking";
+        }
+        
+        var bookRegex = /href="(?:\/book\/|https:\/\/novelfire\.net\/book\/)([^"/?#\s>]+)"/g;
+        var bookMatch;
+        var books = [];
+        var seen = {};
+        while ((bookMatch = bookRegex.exec(sectionContent)) !== null) {
+            var bookId = bookMatch[1];
+            if (!seen[bookId]) {
+                seen[bookId] = true;
+                books.push(bookId);
+            }
+        }
+        
+        sections.push({
+            title: title,
+            layout: layout,
+            books: books
+        });
+    }
+    return sections;
+}
 
-        let results = [];
-        if (response && response.data) {
-            for (let item of response.data) {
-                results.push({
-                    id: item.slug,
-                    title: item.title,
-                    cover_url: item.image ?  : null,
-                    author: null, // Not provided in search
-                });
+function parseBookDetails(html) {
+    var title = "";
+    var titleMatch = /<h1[^>]*itemprop="name"[^>]*>([\s\S]*?)<\/h1>/.exec(html) 
+        || /<h1[^>]*class="[^"]*novel-title[^"]*"[^>]*>([\s\S]*?)<\/h1>/.exec(html);
+    if (titleMatch) title = cleanField(titleMatch[1]);
+    
+    var author = "";
+    var authorMatch = /<span itemprop="author">([\s\S]*?)<\/span>/.exec(html)
+        || /class="property-item"><span itemprop="author">([\s\S]*?)<\/span>/.exec(html);
+    if (authorMatch) author = cleanField(authorMatch[1]);
+    
+    var cover_url = "";
+    var coverMatch = /<figure class="cover">\s*<img[^>]+src="([^"]+)"/.exec(html)
+        || /<div class="fixed-img">[\s\S]*?<img[^>]+src="([^"]+)"/.exec(html);
+    if (coverMatch) cover_url = coverMatch[1].trim();
+    
+    var rating = 0.0;
+    var ratingMatch = /<strong class="nub">([\d.]+)<\/strong>/.exec(html);
+    if (ratingMatch) rating = parseFloat(ratingMatch[1]);
+    
+    var status = "";
+    var statusMatch = /<strong\s+class="(?:ongoing|completed)">([\s\S]*?)<\/strong>/.exec(html)
+        || /<strong\s+class="status">([\s\S]*?)<\/strong>/.exec(html)
+        || /Status:\s*<strong[^>]*>([\s\S]*?)<\/strong>/.exec(html);
+    if (statusMatch) status = cleanField(statusMatch[1]);
+    
+    var chapters_count = 0;
+    var chaptersMatch = /<strong><i class="icon-book-open"><\/i>\s*([\d,]+)<\/strong>/.exec(html)
+        || /<div class="header-stats">[\s\S]*?<strong>[\s\S]*?(\d+)<\/strong>/.exec(html);
+    if (chaptersMatch) chapters_count = parseInt(chaptersMatch[1].replace(/,/g, ""), 10);
+    
+    var genres = [];
+    var categoriesMatch = /<div class="categories">([\s\S]*?)<\/div>/.exec(html);
+    if (categoriesMatch) {
+        var genreRegex = /href="[^"]*genre[^"]*"[^>]*>([^<]+)<\/a>/g;
+        var genreMatch;
+        while ((genreMatch = genreRegex.exec(categoriesMatch[1])) !== null) {
+            genres.push(cleanField(genreMatch[1]));
+        }
+    }
+    
+    var summary = "";
+    var summaryMatch = /<div class="summary">[\s\S]*?<div class="content expand-wrapper">([\s\S]*?)<div class="expand">/.exec(html)
+        || /<div class="summary">[\s\S]*?<div class="content expand-wrapper">([\s\S]*?)<\/div>\s*<\/div>/.exec(html);
+    if (summaryMatch) {
+        summary = cleanHtml(summaryMatch[1]);
+    } else {
+        var metaMatch = /<meta itemprop="description" content="([^"]+)"/.exec(html);
+        if (metaMatch) summary = cleanHtml(metaMatch[1]);
+    }
+    
+    return {
+        title: title,
+        author: author,
+        cover_url: cover_url,
+        rating: rating,
+        status: status,
+        chapters_count: chapters_count,
+        genres: genres,
+        summary: summary,
+        format_hint: "web_novel"
+    };
+}
+
+function parseChapters(html) {
+    var chapters = [];
+    var liRegex = /<li[^>]*>\s*<a\s+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>\s*<\/li>/g;
+    var match;
+    while ((match = liRegex.exec(html)) !== null) {
+        var href = match[1];
+        var content = match[2];
+        
+        var idMatch = /\/(chapter-[^/?#]+)/.exec(href);
+        if (!idMatch) continue;
+        var id = idMatch[1];
+        
+        var title = "";
+        var titleMatch = /<strong[^>]*class="[^"]*chapter-title[^"]*"[^>]*>([\s\S]*?)<\/strong>/.exec(content);
+        if (titleMatch) {
+            title = cleanField(titleMatch[1]);
+        }
+        
+        var date = null;
+        var dateMatch = /<time[^>]+datetime="([^"]+)"/.exec(content);
+        if (dateMatch) {
+            var dateStr = dateMatch[1].trim();
+            // dateStr is like "2026-04-17 09:30:07" or ISO format
+            // Replace space with T to make Date.parse more robust
+            var parsedDate = Date.parse(dateStr.replace(" ", "T"));
+            if (!isNaN(parsedDate)) {
+                date = Math.floor(parsedDate / 1000);
+            }
+        }
+        
+        chapters.push({
+            id: id,
+            title: title,
+            date: date
+        });
+    }
+    return chapters;
+}
+
+function parseChapterContent(html) {
+    var title = "";
+    var titleMatch = /<span class="chapter-title">([\s\S]*?)<\/span>/.exec(html)
+        || /<h1>[\s\S]*?<br>([\s\S]*?)<p/.exec(html);
+    if (titleMatch) title = cleanField(titleMatch[1]);
+    
+    var content = "";
+    var contentMatch = /<div id="content"[^>]*>([\s\S]*?)<\/div>/.exec(html);
+    if (contentMatch) {
+        content = contentMatch[1];
+    }
+    
+    return {
+        title: title,
+        content: content
+    };
+}
+
+function parseSearch(payload) {
+    try {
+        var obj = JSON.parse(payload);
+        var data = obj.data || [];
+        var results = [];
+        for (var i = 0; i < data.length; i++) {
+            if (data[i] && data[i].slug) {
+                results.push(data[i].slug);
             }
         }
         return results;
-    },
-
-    // Get book details
-    get_details: async function(book_id) {
-        let url = ;
-        let html = await fetch_html(url); // fetch_html provided by Rust
-
-        let title = select_text(html, ".novel-title");
-        let author = select_text(html, ".author span[itemprop='author']");
-
-        let cover_url = select_attr(html, ".fixed-img .cover img", "data-src");
-        if (!cover_url) {
-            cover_url = select_attr(html, ".fixed-img .cover img", "src");
-        }
-
-        let summary = select_text(html, ".summary .content");
-        let status = select_text(html, ".header-stats .completed, .header-stats .ongoing");
-
-        return {
-            id: book_id,
-            title,
-            author,
-            cover_url,
-            summary,
-            status,
-        };
-    },
-
-    // Get chapter list
-    get_chapters: async function(book_id) {
-        let url = ; // Usually chapters are on a separate tab/page
-        let html = await fetch_html(url);
-
-        let chapter_elements = select_elements(html, "ul.chapter-list li a"); // select_elements provided by Rust
-
-        let chapters = [];
-        for (let el of chapter_elements) {
-            let href = el.attr("href");
-            if (href) {
-                // Extract chapter ID from the URL using regex
-                let match = href.match(/\/book\/[^\/]+\/([^/?#]+)/);
-                if (match) {
-                    chapters.push({
-                        id: match[1],
-                        title: el.text(),
-                        url: href
-                    });
-                }
-            }
-        }
-        return chapters;
-    },
-
-    // Get chapter content
-    get_chapter_content: async function(book_id, chapter_id) {
-        let url = ;
-        let html = await fetch_html(url);
-
-        let title = select_text(html, ".chapter-title");
-        let content_html = select_html(html, "#content"); // Gets the inner HTML of the content div
-
-        return {
-            id: chapter_id,
-            title: title,
-            content: content_html
-        };
+    } catch (e) {
+        return [];
     }
-};
+}
