@@ -1,0 +1,3 @@
+chapter list in the website are every page has 100 chapters listed so if a book has 150 chapter
+first 100 chapters are listed in https://novelfire.net/book/<book_id>/chapters?page=1
+the other 50 chapter are in https://novelfire.net/book/<book_id>/chapters?page=2
