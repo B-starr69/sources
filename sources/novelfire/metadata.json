@@ -10,52 +10,42 @@
     "default_format": "web_novel",
     "home": {
       "fetch": {
-        "type": "js",
-        "js_function": "fetchHome"
+        "engine": "js"
       },
       "parse": {
-        "engine": "js",
-        "js_function": "parseHome"
+        "engine": "js"
       }
     },
     "details": {
       "fetch": {
-        "type": "js",
-        "js_function": "fetchBookDetails"
+        "engine": "js"
       },
       "parse": {
-        "engine": "js",
-        "js_function": "parseBookDetails"
+        "engine": "js"
       }
     },
     "chapter": {
       "fetch": {
-        "type": "js",
-        "js_function": "fetchChapterContent"
+        "engine": "js"
       },
       "parse": {
-        "engine": "js",
-        "js_function": "parseChapterContent"
+        "engine": "js"
       }
     },
     "chapters_list": {
       "fetch": {
-        "type": "js",
-        "js_function": "fetchChaptersList"
+        "engine": "js"
       },
       "parse": {
-        "engine": "js",
-        "js_function": "parseChapters"
+        "engine": "js"
       }
     },
     "search": {
       "fetch": {
-        "type": "js",
-        "js_function": "fetchSearch"
+        "engine": "js"
       },
       "parse": {
-        "engine": "js",
-        "js_function": "parseSearch"
+        "engine": "js"
       }
     },
     "genres": []

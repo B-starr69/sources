@@ -1,18 +1,18 @@
 function cleanHtml(htmlStr) {
   if (!htmlStr) return "";
   return htmlStr
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/p>/gi, "\n\n")
-    .replace(/<\/div>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&#x27;/g, "'")
-    .trim();
+  .replace(/<br\s*\/?>/gi, "\n")
+  .replace(/<\/p>/gi, "\n\n")
+  .replace(/<\/div>/gi, "\n")
+  .replace(/<[^>]+>/g, "")
+  .replace(/&nbsp;/g, " ")
+  .replace(/&amp;/g, "&")
+  .replace(/&lt;/g, "<")
+  .replace(/&gt;/g, ">")
+  .replace(/&quot;/g, '"')
+  .replace(/&#39;/g, "'")
+  .replace(/&#x27;/g, "'")
+  .trim();
 }
 
 function cleanField(str) {
@@ -22,7 +22,7 @@ function cleanField(str) {
 function parseHome(html) {
   var sections = [];
   var sectionRegex =
-    /<section[^>]+class="[^"]*container vspace[^"]*"[^>]*>([\s\S]*?)<\/section>/g;
+  /<section[^>]+class="[^"]*container vspace[^"]*"[^>]*>([\s\S]*?)<\/section>/g;
   var match;
   while ((match = sectionRegex.exec(html)) !== null) {
     var sectionContent = match[1];
@@ -39,7 +39,7 @@ function parseHome(html) {
     }
 
     var bookRegex =
-      /href="(?:\/book\/|https:\/\/novelfire\.net\/book\/)([^"/?#\s>]+)"/g;
+    /href="(?:\/book\/|https:\/\/novelfire\.net\/book\/)([^"/?#\s>]+)"/g;
     var bookMatch;
     var books = [];
     var seen = {};
@@ -63,22 +63,22 @@ function parseHome(html) {
 function parseBookDetails(html) {
   var title = "";
   var titleMatch =
-    /<h1[^>]*itemprop="name"[^>]*>([\s\S]*?)<\/h1>/.exec(html) ||
-    /<h1[^>]*class="[^"]*novel-title[^"]*"[^>]*>([\s\S]*?)<\/h1>/.exec(html);
+  /<h1[^>]*itemprop="name"[^>]*>([\s\S]*?)<\/h1>/.exec(html) ||
+  /<h1[^>]*class="[^"]*novel-title[^"]*"[^>]*>([\s\S]*?)<\/h1>/.exec(html);
   if (titleMatch) title = cleanField(titleMatch[1]);
 
   var author = "";
   var authorMatch =
-    /<span itemprop="author">([\s\S]*?)<\/span>/.exec(html) ||
-    /class="property-item"><span itemprop="author">([\s\S]*?)<\/span>/.exec(
-      html,
-    );
+  /<span itemprop="author">([\s\S]*?)<\/span>/.exec(html) ||
+  /class="property-item"><span itemprop="author">([\s\S]*?)<\/span>/.exec(
+    html,
+  );
   if (authorMatch) author = cleanField(authorMatch[1]);
 
   var cover_url = "";
   var coverMatch =
-    /<figure class="cover">\s*<img[^>]+src="([^"]+)"/.exec(html) ||
-    /<div class="fixed-img">[\s\S]*?<img[^>]+src="([^"]+)"/.exec(html);
+  /<figure class="cover">\s*<img[^>]+src="([^"]+)"/.exec(html) ||
+  /<div class="fixed-img">[\s\S]*?<img[^>]+src="([^"]+)"/.exec(html);
   if (coverMatch) cover_url = coverMatch[1].trim();
 
   var rating = 0.0;
@@ -87,17 +87,17 @@ function parseBookDetails(html) {
 
   var status = "";
   var statusMatch =
-    /<strong\s+class="(?:ongoing|completed)">([\s\S]*?)<\/strong>/.exec(html) ||
-    /<strong\s+class="status">([\s\S]*?)<\/strong>/.exec(html) ||
-    /Status:\s*<strong[^>]*>([\s\S]*?)<\/strong>/.exec(html);
+  /<strong\s+class="(?:ongoing|completed)">([\s\S]*?)<\/strong>/.exec(html) ||
+  /<strong\s+class="status">([\s\S]*?)<\/strong>/.exec(html) ||
+  /Status:\s*<strong[^>]*>([\s\S]*?)<\/strong>/.exec(html);
   if (statusMatch) status = cleanField(statusMatch[1]);
 
   var chapters_count = 0;
   var chaptersMatch =
-    /<strong><i class="icon-book-open"><\/i>\s*([\d,]+)<\/strong>/.exec(html) ||
-    /<div class="header-stats">[\s\S]*?<strong>[\s\S]*?(\d+)<\/strong>/.exec(
-      html,
-    );
+  /<strong><i class="icon-book-open"><\/i>\s*([\d,]+)<\/strong>/.exec(html) ||
+  /<div class="header-stats">[\s\S]*?<strong>[\s\S]*?(\d+)<\/strong>/.exec(
+    html,
+  );
   if (chaptersMatch)
     chapters_count = parseInt(chaptersMatch[1].replace(/,/g, ""), 10);
 
@@ -113,12 +113,12 @@ function parseBookDetails(html) {
 
   var summary = "";
   var summaryMatch =
-    /<div class="summary">[\s\S]*?<div class="content expand-wrapper">([\s\S]*?)<div class="expand">/.exec(
-      html,
-    ) ||
-    /<div class="summary">[\s\S]*?<div class="content expand-wrapper">([\s\S]*?)<\/div>\s*<\/div>/.exec(
-      html,
-    );
+  /<div class="summary">[\s\S]*?<div class="content expand-wrapper">([\s\S]*?)<div class="expand">/.exec(
+    html,
+  ) ||
+  /<div class="summary">[\s\S]*?<div class="content expand-wrapper">([\s\S]*?)<\/div>\s*<\/div>/.exec(
+    html,
+  );
   if (summaryMatch) {
     summary = cleanHtml(summaryMatch[1]);
   } else {
@@ -142,7 +142,7 @@ function parseBookDetails(html) {
 function parseChapters(html) {
   var chapters = [];
   var liRegex =
-    /<li[^>]*>\s*<a\s+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>\s*<\/li>/g;
+  /<li[^>]*>\s*<a\s+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>\s*<\/li>/g;
   var match;
   while ((match = liRegex.exec(html)) !== null) {
     var href = match[1];
@@ -154,9 +154,9 @@ function parseChapters(html) {
 
     var title = "";
     var titleMatch =
-      /<strong[^>]*class="[^"]*chapter-title[^"]*"[^>]*>([\s\S]*?)<\/strong>/.exec(
-        content,
-      );
+    /<strong[^>]*class="[^"]*chapter-title[^"]*"[^>]*>([\s\S]*?)<\/strong>/.exec(
+      content,
+    );
     if (titleMatch) {
       title = cleanField(titleMatch[1]);
     }
@@ -185,8 +185,8 @@ function parseChapters(html) {
 function parseChapterContent(html) {
   var title = "";
   var titleMatch =
-    /<span class="chapter-title">([\s\S]*?)<\/span>/.exec(html) ||
-    /<h1>[\s\S]*?<br>([\s\S]*?)<p/.exec(html);
+  /<span class="chapter-title">([\s\S]*?)<\/span>/.exec(html) ||
+  /<h1>[\s\S]*?<br>([\s\S]*?)<p/.exec(html);
   if (titleMatch) title = cleanField(titleMatch[1]);
 
   var content = "";
