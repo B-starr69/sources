@@ -18,48 +18,67 @@ function cleanHtml(htmlStr) {
 function cleanField(str) {
   return cleanHtml(str).replace(/\s+/g, " ");
 }
-
 function parseHome(html) {
   var sections = [];
+  // More robust regex to catch the section classes
   var sectionRegex =
-  /<section[^>]+class="[^"]*container vspace[^"]*"[^>]*>([\s\S]*?)<\/section>/g;
-  var match;
-  while ((match = sectionRegex.exec(html)) !== null) {
-    var sectionContent = match[1];
+  /<section[^>]*class="[^"]*\bcontainer vspace\b[^"]*"[^>]*>([\s\S]*?)<\/section>/g;
+  var sectionMatch;
 
-    var titleMatch = /<h3>([\s\S]*?)<\/h3>/.exec(sectionContent);
+  while ((sectionMatch = sectionRegex.exec(html)) !== null) {
+    var sectionHtml = sectionMatch[1];
+
+    // Get main title safely without calling undefined functions
+    var titleMatch = /<h3>([^<]+)<\/h3>/.exec(sectionHtml);
     if (!titleMatch) continue;
-    var title = cleanField(titleMatch[1]);
 
-    var layout = "grid";
-    if (title.indexOf("Recommend") !== -1) {
-      layout = "horizontal";
-    } else if (title.indexOf("Ranking") !== -1) {
-      layout = "ranking";
-    }
+    var mainTitle = titleMatch[1].trim();
+    var isRanking = mainTitle.includes("Ranking");
 
-    var bookRegex =
-    /href="(?:\/book\/|https:\/\/novelfire\.net\/book\/)([^"/?#\s>]+)"/g;
-    var bookMatch;
-    var books = [];
-    var seen = {};
-    while ((bookMatch = bookRegex.exec(sectionContent)) !== null) {
-      var bookId = bookMatch[1];
-      if (!seen[bookId]) {
-        seen[bookId] = true;
-        books.push(bookId);
+    if (isRanking) {
+      // Split by sub-containers for the Ranking tabs
+      var containers = sectionHtml.split(/<div class="rank-container">/);
+      containers.forEach(function (containerHtml, index) {
+        if (index === 0) return; // Skip content before the first tab
+
+        var subCatMatch = /<h3><span>([^<]+)<\/span><\/h3>/.exec(containerHtml);
+        var subTitle = subCatMatch
+        ? "Ranking - " + subCatMatch[1].trim()
+        : "Ranking";
+
+        var ids = extractIds(containerHtml);
+        if (ids.length > 0)
+          // ✅ FIX: Changed 'ids: ids' to 'books: ids'
+          sections.push({ title: subTitle, layout: "ranking", books: ids });
+      });
+    } else {
+      var ids = extractIds(sectionHtml);
+      if (ids.length > 0) {
+        var layout = mainTitle.includes("Recommend") ? "horizontal" : "grid";
+        sections.push({ title: mainTitle, layout: layout, books: ids });
       }
     }
-
-    sections.push({
-      title: title,
-      layout: layout,
-      books: books,
-    });
   }
+
+  // Helper to extract just the IDs using a simplified regex
+  function extractIds(htmlChunk) {
+    var bookRegex = /\/book\/([^"\/?#\s>]+)/g;
+    var match;
+    var ids = [];
+    var seen = {};
+
+    while ((match = bookRegex.exec(htmlChunk)) !== null) {
+      var id = match[1];
+      if (!seen[id]) {
+        seen[id] = true;
+        ids.push(id);
+      }
+    }
+    return ids;
+  }
+
   return sections;
 }
-
 function parseBookDetails(html) {
   var title = "";
   var titleMatch =
@@ -224,7 +243,7 @@ function parseSearch(payload) {
  */
 
 // A mock base URL for a book API or scraping target
-const BASE_URL = "https://novelfire.net/";
+const BASE_URL = "https://novelfire.net";
 
 /**
  * Fetches the home feed.
