@@ -154,7 +154,6 @@ function parseBookDetails(html) {
     chapters_count: chapters_count,
     genres: genres,
     summary: summary,
-    format_hint: "web_novel",
   };
 }
 
@@ -268,7 +267,7 @@ function fetchHome() {
  */
 function fetchBookDetails(bookId) {
   try {
-    const rawData = fetchUrl(`${BASE_URL}/books/${bookId}`);
+    const rawData = fetchUrl(`${BASE_URL}/book/${bookId}`);
     return rawData;
   } catch (error) {
     return JSON.stringify({
@@ -281,13 +280,68 @@ function fetchBookDetails(bookId) {
  * Fetches the list of chapters for a given book.
  * Map to: fetch_chapters_list(book_id) -> default "fetchChaptersList"
  */
-function fetchChaptersList(bookId) {
+function fetchChaptersList(bookId, page) {
   try {
-    const rawData = fetchUrl(`${BASE_URL}/books/${bookId}/chapters`);
-    return rawData;
+    // If a specific page is requested, fetch only that page
+    if (page && page > 0) {
+      var url = page === 1
+      ? `${BASE_URL}/book/${bookId}/chapters`
+      : `${BASE_URL}/book/${bookId}/chapters?page=${page}`;
+      return fetchUrl(url);
+    }
+
+    // Otherwise, fetch all pages sequentially with the smart rate-limited loop
+    var allHtml = "";
+    var pageNum = 1;
+    var seenChapters = {};
+    while (true) {
+      var url = pageNum === 1
+      ? `${BASE_URL}/book/${bookId}/chapters`
+      : `${BASE_URL}/book/${bookId}/chapters?page=${pageNum}`;
+
+      var rawData = fetchUrl(url);
+      if (!rawData) {
+        break;
+      }
+
+      // Extract chapter slugs on this page and check if we've seen them before
+      var chapterRegex = /\/chapter-[^"\/?#\s>]+/g;
+      var match;
+      var hasNew = false;
+      while ((match = chapterRegex.exec(rawData)) !== null) {
+        var chapId = match[0];
+        if (!seenChapters[chapId]) {
+          seenChapters[chapId] = true;
+          hasNew = true;
+        }
+      }
+
+      if (!hasNew) {
+        break; // Stop if this page doesn't introduce any new chapters
+      }
+
+      allHtml += rawData;
+      pageNum++;
+
+      // Sleep for 200ms between requests to prevent rate limiting
+      if (typeof sleep === "function") {
+        sleep(200);
+      }
+
+      // Safety cap at 200 pages to prevent runaway loops
+      if (pageNum > 200) {
+        break;
+      }
+    }
+
+    if (allHtml === "") {
+      return fetchUrl(`${BASE_URL}/book/${bookId}/chapters`);
+    }
+
+    return allHtml;
   } catch (error) {
     return JSON.stringify({
-      error: `Failed to fetch chapters for ${bookId}: ` + error,
+      error: `Failed to fetch chapters for ${bookId} page ${page}: ` + error,
     });
   }
 }
@@ -299,7 +353,7 @@ function fetchChaptersList(bookId) {
 function fetchChapterContent(bookId, chapterId) {
   try {
     const rawData = fetchUrl(
-      `${BASE_URL}/books/${bookId}/chapters/${chapterId}`,
+      `${BASE_URL}/book/${bookId}/chapters/${chapterId}`,
     );
     return rawData;
   } catch (error) {
