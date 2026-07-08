@@ -201,6 +201,10 @@ function parseChapters(html) {
 }
 
 function parseChapterContent(html) {
+  if (!html || html.trim() === "" || html.trim().startsWith("{")) {
+    throw new Error("Invalid or empty HTML content received: " + html);
+  }
+
   var title = "";
   var titleMatch =
   /<span class="chapter-title">([\s\S]*?)<\/span>/.exec(html) ||
@@ -211,6 +215,12 @@ function parseChapterContent(html) {
   var contentMatch = /<div id="content"[^>]*>([\s\S]*?)<\/div>/.exec(html);
   if (contentMatch) {
     content = contentMatch[1];
+  } else {
+    throw new Error("Could not find chapter content container (<div id=\"content\">) in HTML");
+  }
+
+  if (!content || content.trim() === "") {
+    throw new Error("Parsed chapter content container is empty");
   }
 
   return {
@@ -353,7 +363,7 @@ function fetchChaptersList(bookId, page) {
 function fetchChapterContent(bookId, chapterId) {
   try {
     const rawData = fetchUrl(
-      `${BASE_URL}/book/${bookId}/chapters/${chapterId}`,
+      `${BASE_URL}/book/${bookId}/${chapterId}`,
     );
     return rawData;
   } catch (error) {
