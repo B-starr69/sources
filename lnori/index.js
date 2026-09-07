@@ -53,10 +53,25 @@ function extractBookUrls(html) {
   return unique(urls);
 }
 
+function extractFirstBookUrl(html) {
+  var startReading = /href=["'](\/book\/[^"'?#]+)["'][^>]*>[\s\S]{0,120}?Start Reading/i.exec(html);
+  if (startReading) return startReading[1];
+  var books = extractBookUrls(html);
+  return books.length > 0 ? books[0] : "";
+}
+
 function parseHome(html) {
   var urls = unique(extractBookUrls(html));
+  if (urls.length === 0) {
+    var simpleSection = /<section[^>]*>[\s\S]*?<\/section>/gi;
+    var sectionMatch;
+    while ((sectionMatch = simpleSection.exec(html)) !== null) {
+      urls = urls.concat(extractBookUrls(sectionMatch[0]));
+    }
+    urls = unique(urls);
+  }
   return [{
-    title: "Lnori Volumes",
+    title: "Featured Light Novel Series",
     layout: "grid",
     books: urls.map(function (url) {
       return url.split("/")[2];
@@ -172,20 +187,20 @@ function parseChapterContent(html) {
 
 function fetchHome() {
   var libraryHtml = fetchUrl(BASE_URL + "/library");
-  var urls = extractBookUrls(libraryHtml);
   var seriesUrls = extractSeriesUrls(libraryHtml);
+  var urls = [];
 
-  // The library lists series, while the reader works on individual volumes.
-  // Expand a bounded number of series here so every Discover card is a volume.
-  for (var i = 0; i < seriesUrls.length && urls.length < 300; i++) {
+  // The library is series-oriented. Discover shows one representative volume
+  // for each series; the volume page still exposes the full series metadata.
+  // Keep startup responsive: each series page is an additional network
+  // request, and the app loads volume details after this feed is returned.
+  for (var i = 0; i < seriesUrls.length && urls.length < 12; i++) {
     var seriesHtml = fetchUrl(BASE_URL + seriesUrls[i]);
-    var seriesBooks = extractBookUrls(seriesHtml);
-    for (var j = 0; j < seriesBooks.length && urls.length < 300; j++) {
-      urls.push(seriesBooks[j]);
-    }
+    var firstBook = extractFirstBookUrl(seriesHtml);
+    if (firstBook) urls.push(firstBook);
   }
 
-  return "<section><h3>Lnori Volumes</h3>" +
+  return "<section><h3>Featured Light Novel Series</h3>" +
     unique(urls).map(function (url) {
       return "<a href=\"" + url + "\">Volume</a>";
     }).join("") +
