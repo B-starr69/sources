@@ -235,9 +235,20 @@ function parseSearch(payload) {
     var data = obj.data || [];
     var results = [];
     for (var i = 0; i < data.length; i++) {
-      if (data[i] && data[i].slug) {
-        results.push(data[i].slug);
+      var item = data[i];
+      if (!item || !item.slug) continue;
+
+      var cover = item.image || "";
+      if (cover && cover.indexOf("http") !== 0) {
+        cover = "https://novelfire.net/" + cover.replace(/^\//, "");
       }
+
+      results.push({
+        id: item.slug,
+        title: item.title || item.slug,
+        cover_url: cover,
+        chapters_count: item.total_chapter || 0,
+      });
     }
     return results;
   } catch (e) {
@@ -374,19 +385,24 @@ function fetchChapterContent(bookId, chapterId) {
 }
 
 /**
- * Searches for books based on keywords and an optional genre.
+ * Searches for books based on keywords and an optional type filter.
  * Map to: fetch_search(keyword, genre) -> default "fetchSearch"
+ *
+ * NovelFire live search returns JSON: { data: [{ title, slug, ... }] }
+ * The second arg is reused as `type` when it is title|author|both;
+ * otherwise defaults to title (Rust passes "" when genre is None).
  */
 function fetchSearch(keyword, genre) {
   try {
-    // Rust passes genre as an empty string if it's None
-    let url = `${BASE_URL}/search?q=${encodeURIComponent(keyword)}`;
-    if (genre && genre !== "") {
-      url += `&genre=${encodeURIComponent(genre)}`;
+    var type = "title";
+    if (genre === "author" || genre === "both" || genre === "title") {
+      type = genre;
     }
-
-    const rawData = fetchUrl(url);
-    return rawData;
+    var url =
+      `${BASE_URL}/ajax/searchLive` +
+      `?keyword=${encodeURIComponent(keyword)}` +
+      `&type=${encodeURIComponent(type)}`;
+    return fetchUrl(url);
   } catch (error) {
     return JSON.stringify({ error: `Search failed for context: ` + error });
   }
