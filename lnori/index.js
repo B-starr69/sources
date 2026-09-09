@@ -25,6 +25,13 @@ function absoluteUrl(url) {
   return BASE_URL + (url.indexOf("/") === 0 ? url : "/" + url);
 }
 
+function extractEpubUrl(html) {
+  var match =
+    /<a[^>]+id=["']download-epub["'][^>]+href=["']([^"']+)["']/i.exec(html) ||
+    /<a[^>]+href=["']([^"']+)["'][^>]+id=["']download-epub["']/i.exec(html);
+  return match ? absoluteUrl(decodeEntities(match[1].trim())) : "";
+}
+
 function unique(values) {
   var seen = {};
   var result = [];
@@ -53,25 +60,10 @@ function extractBookUrls(html) {
   return unique(urls);
 }
 
-function extractFirstBookUrl(html) {
-  var startReading = /href=["'](\/book\/[^"'?#]+)["'][^>]*>[\s\S]{0,120}?Start Reading/i.exec(html);
-  if (startReading) return startReading[1];
-  var books = extractBookUrls(html);
-  return books.length > 0 ? books[0] : "";
-}
-
 function parseHome(html) {
   var urls = unique(extractBookUrls(html));
-  if (urls.length === 0) {
-    var simpleSection = /<section[^>]*>[\s\S]*?<\/section>/gi;
-    var sectionMatch;
-    while ((sectionMatch = simpleSection.exec(html)) !== null) {
-      urls = urls.concat(extractBookUrls(sectionMatch[0]));
-    }
-    urls = unique(urls);
-  }
   return [{
-    title: "Featured Light Novel Series",
+    title: "Lnori Volumes",
     layout: "grid",
     books: urls.map(function (url) {
       return url.split("/")[2];
@@ -117,6 +109,7 @@ function parseBookDetails(html) {
   var bookId = property(data, "book_id");
   var seriesId = property(data, "series_id");
   var description = data.description || "";
+  var downloadUrl = extractEpubUrl(html);
   if (!volumeNumber) {
     var volumeMatch = /(?:,|\s)(?:vol(?:ume)?\.?\s*)(\d+)/i.exec(title);
     if (volumeMatch) volumeNumber = volumeMatch[1];
@@ -131,10 +124,12 @@ function parseBookDetails(html) {
     chapters_count: data.hasPart ? data.hasPart.length : 0,
     genres: [],
     summary: cleanHtml(description),
+    format_hint: "epub",
     series_id: seriesId,
     series_title: seriesTitle,
     volume_number: volumeNumber ? parseInt(volumeNumber, 10) : null,
-    book_id: bookId
+    book_id: bookId,
+    download_url: downloadUrl
   };
 }
 
@@ -187,20 +182,20 @@ function parseChapterContent(html) {
 
 function fetchHome() {
   var libraryHtml = fetchUrl(BASE_URL + "/library");
+  var urls = extractBookUrls(libraryHtml);
   var seriesUrls = extractSeriesUrls(libraryHtml);
-  var urls = [];
 
-  // The library is series-oriented. Discover shows one representative volume
-  // for each series; the volume page still exposes the full series metadata.
-  // Keep startup responsive: each series page is an additional network
-  // request, and the app loads volume details after this feed is returned.
-  for (var i = 0; i < seriesUrls.length && urls.length < 12; i++) {
+  // The library lists series, while the reader works on individual volumes.
+  // Expand a bounded number of series here so every Discover card is a volume.
+  for (var i = 0; i < seriesUrls.length && urls.length < 300; i++) {
     var seriesHtml = fetchUrl(BASE_URL + seriesUrls[i]);
-    var firstBook = extractFirstBookUrl(seriesHtml);
-    if (firstBook) urls.push(firstBook);
+    var seriesBooks = extractBookUrls(seriesHtml);
+    for (var j = 0; j < seriesBooks.length && urls.length < 300; j++) {
+      urls.push(seriesBooks[j]);
+    }
   }
 
-  return "<section><h3>Featured Light Novel Series</h3>" +
+  return "<section><h3>Lnori Volumes</h3>" +
     unique(urls).map(function (url) {
       return "<a href=\"" + url + "\">Volume</a>";
     }).join("") +

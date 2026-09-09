@@ -1,13 +1,13 @@
 {
-  "id": "lnori",
-  "url": "https://lnori.com",
-  "cover_url_pattern": "https://cdn.lnori.com/cover/",
-  "name": "Lnori",
-  "icon_url": "https://cdn.lnori.com/icons/w-16.png",
-  "description": "Light novel series and volume catalog",
+  "id": "novelfire",
+  "url": "https://novelfire.net",
+  "cover_url_pattern": "https://novelfire.net/",
+  "name": "NovelFire",
+  "icon_url": null,
+  "description": "Novel reading platform with CSS-based structure",
   "config": {
-    "script_path": "sources/lnori/index.js",
-    "default_format": "novel",
+    "script_path": "sources/novelfire/index.js",
+    "default_format": "web_novel",
     "home": {
       "fetch": {
         "engine": "js"
@@ -33,6 +33,14 @@
       }
     },
     "chapters_list": {
+      "fetch": {
+        "engine": "js"
+      },
+      "parse": {
+        "engine": "js"
+      }
+    },
+    "search": {
       "fetch": {
         "engine": "js"
       },
