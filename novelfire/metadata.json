@@ -1,0 +1,493 @@
+{
+  "id": "novelfire",
+  "url": "https://novelfire.net",
+  "cover_url_pattern": "https://novelfire.net/",
+  "name": "NovelFire",
+  "icon_url": null,
+  "description": "Novel reading platform with CSS-based structure",
+  "config": {
+    "script_path": "sources/novelfire/index.js",
+    "default_format": "web_novel",
+    "home": {
+      "fetch": {
+        "engine": "js"
+      },
+      "parse": {
+        "engine": "js"
+      }
+    },
+    "details": {
+      "fetch": {
+        "engine": "js"
+      },
+      "parse": {
+        "engine": "js"
+      }
+    },
+    "chapter": {
+      "fetch": {
+        "engine": "js"
+      },
+      "parse": {
+        "engine": "js"
+      }
+    },
+    "chapters_list": {
+      "fetch": {
+        "engine": "js"
+      },
+      "parse": {
+        "engine": "js"
+      }
+    },
+    "search": {
+      "fetch": {
+        "engine": "js"
+      },
+      "parse": {
+        "engine": "js"
+      },
+      "filters": [
+        {
+          "id": "type",
+          "name": "Search in",
+          "type": "select",
+          "options": [
+            {
+              "name": "Title",
+              "value": "title"
+            },
+            {
+              "name": "Author",
+              "value": "author"
+            },
+            {
+              "name": "Title & author",
+              "value": "both"
+            }
+          ]
+        }
+      ]
+    },
+    "browse": {
+      "fetch": {
+        "engine": "js"
+      },
+      "parse": {
+        "engine": "js"
+      },
+      "filters": [
+        {
+          "id": "sort",
+          "name": "Sort by",
+          "type": "select",
+          "default": "rank-top",
+          "options": [
+            {
+              "name": "Rank",
+              "value": "rank-top"
+            },
+            {
+              "name": "Rating score",
+              "value": "rating-score-top"
+            },
+            {
+              "name": "Last updated",
+              "value": "date"
+            },
+            {
+              "name": "Bookmarks",
+              "value": "bookmark"
+            },
+            {
+              "name": "Reviews",
+              "value": "review"
+            },
+            {
+              "name": "Comments",
+              "value": "comment"
+            },
+            {
+              "name": "Views today",
+              "value": "today-view"
+            },
+            {
+              "name": "Views this month",
+              "value": "monthly-view"
+            },
+            {
+              "name": "Total views",
+              "value": "total-view"
+            },
+            {
+              "name": "Most chapters",
+              "value": "chapter-count-most"
+            },
+            {
+              "name": "Title A–Z",
+              "value": "abc"
+            },
+            {
+              "name": "Title Z–A",
+              "value": "cba"
+            }
+          ]
+        },
+        {
+          "id": "status",
+          "name": "Status",
+          "type": "select",
+          "options": [
+            {
+              "name": "Any",
+              "value": "-1"
+            },
+            {
+              "name": "Completed",
+              "value": "1"
+            },
+            {
+              "name": "Ongoing",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "min_rating",
+          "name": "Minimum rating",
+          "type": "select",
+          "options": [
+            {
+              "name": "Any",
+              "value": "0"
+            },
+            {
+              "name": "1+",
+              "value": "1"
+            },
+            {
+              "name": "2+",
+              "value": "2"
+            },
+            {
+              "name": "3+",
+              "value": "3"
+            },
+            {
+              "name": "4+",
+              "value": "4"
+            },
+            {
+              "name": "5",
+              "value": "5"
+            }
+          ]
+        },
+        {
+          "id": "chapters",
+          "name": "Chapters",
+          "type": "select",
+          "options": [
+            {
+              "name": "Any",
+              "value": "0"
+            },
+            {
+              "name": "Under 50",
+              "value": "1,49"
+            },
+            {
+              "name": "50–100",
+              "value": "50,100"
+            },
+            {
+              "name": "100–200",
+              "value": "100,200"
+            },
+            {
+              "name": "200–500",
+              "value": "200,500"
+            },
+            {
+              "name": "500–1000",
+              "value": "500,1000"
+            },
+            {
+              "name": "Over 1000",
+              "value": "1001,1000000"
+            }
+          ]
+        },
+        {
+          "id": "genres",
+          "name": "Genres",
+          "type": "multi_select",
+          "options": [
+            {
+              "name": "Action",
+              "value": "3"
+            },
+            {
+              "name": "Adult",
+              "value": "28"
+            },
+            {
+              "name": "Adventure",
+              "value": "4"
+            },
+            {
+              "name": "Anime",
+              "value": "46"
+            },
+            {
+              "name": "Arts",
+              "value": "47"
+            },
+            {
+              "name": "Comedy",
+              "value": "5"
+            },
+            {
+              "name": "Drama",
+              "value": "24"
+            },
+            {
+              "name": "Eastern",
+              "value": "44"
+            },
+            {
+              "name": "Ecchi",
+              "value": "26"
+            },
+            {
+              "name": "Fan-fiction",
+              "value": "48"
+            },
+            {
+              "name": "Fantasy",
+              "value": "6"
+            },
+            {
+              "name": "Game",
+              "value": "19"
+            },
+            {
+              "name": "Gender Bender",
+              "value": "25"
+            },
+            {
+              "name": "Harem",
+              "value": "7"
+            },
+            {
+              "name": "Historical",
+              "value": "12"
+            },
+            {
+              "name": "Horror",
+              "value": "37"
+            },
+            {
+              "name": "Isekai",
+              "value": "49"
+            },
+            {
+              "name": "Josei",
+              "value": "2"
+            },
+            {
+              "name": "Lgbt+",
+              "value": "45"
+            },
+            {
+              "name": "Magic",
+              "value": "50"
+            },
+            {
+              "name": "Magical realism",
+              "value": "51"
+            },
+            {
+              "name": "Manhua",
+              "value": "52"
+            },
+            {
+              "name": "Martial Arts",
+              "value": "15"
+            },
+            {
+              "name": "Mature",
+              "value": "8"
+            },
+            {
+              "name": "Mecha",
+              "value": "34"
+            },
+            {
+              "name": "Military",
+              "value": "53"
+            },
+            {
+              "name": "Modern life",
+              "value": "54"
+            },
+            {
+              "name": "Movies",
+              "value": "55"
+            },
+            {
+              "name": "Mystery",
+              "value": "16"
+            },
+            {
+              "name": "Other",
+              "value": "64"
+            },
+            {
+              "name": "Psychological",
+              "value": "9"
+            },
+            {
+              "name": "Realistic fiction",
+              "value": "56"
+            },
+            {
+              "name": "Reincarnation",
+              "value": "43"
+            },
+            {
+              "name": "Romance",
+              "value": "1"
+            },
+            {
+              "name": "School Life",
+              "value": "21"
+            },
+            {
+              "name": "Sci-fi",
+              "value": "20"
+            },
+            {
+              "name": "Seinen",
+              "value": "10"
+            },
+            {
+              "name": "Shoujo",
+              "value": "38"
+            },
+            {
+              "name": "Shoujo ai",
+              "value": "57"
+            },
+            {
+              "name": "Shounen",
+              "value": "17"
+            },
+            {
+              "name": "Shounen Ai",
+              "value": "39"
+            },
+            {
+              "name": "Slice of Life",
+              "value": "13"
+            },
+            {
+              "name": "Smut",
+              "value": "29"
+            },
+            {
+              "name": "Sports",
+              "value": "42"
+            },
+            {
+              "name": "Supernatural",
+              "value": "18"
+            },
+            {
+              "name": "System",
+              "value": "58"
+            },
+            {
+              "name": "Tragedy",
+              "value": "32"
+            },
+            {
+              "name": "Urban",
+              "value": "63"
+            },
+            {
+              "name": "Urban life",
+              "value": "59"
+            },
+            {
+              "name": "Video games",
+              "value": "60"
+            },
+            {
+              "name": "War",
+              "value": "61"
+            },
+            {
+              "name": "Wuxia",
+              "value": "31"
+            },
+            {
+              "name": "Xianxia",
+              "value": "23"
+            },
+            {
+              "name": "Xuanhuan",
+              "value": "22"
+            },
+            {
+              "name": "Yaoi",
+              "value": "14"
+            },
+            {
+              "name": "Yuri",
+              "value": "62"
+            }
+          ]
+        },
+        {
+          "id": "genre_match",
+          "name": "Genre match",
+          "type": "select",
+          "options": [
+            {
+              "name": "All selected",
+              "value": "and"
+            },
+            {
+              "name": "Any selected",
+              "value": "or"
+            },
+            {
+              "name": "Exclude selected",
+              "value": "exclude"
+            }
+          ]
+        },
+        {
+          "id": "origin",
+          "name": "Origin",
+          "type": "multi_select",
+          "options": [
+            {
+              "name": "Chinese Novel",
+              "value": "1"
+            },
+            {
+              "name": "Japanese Novel",
+              "value": "3"
+            },
+            {
+              "name": "English Novel",
+              "value": "4"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
